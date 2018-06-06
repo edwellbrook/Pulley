@@ -507,7 +507,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             {
                 let lowestDrawerState: PulleyPosition = supportedPositions.filter({ $0 != .hidden }).min { (pos1, pos2) -> Bool in
                     return pos1.rawValue < pos2.rawValue
-                    } ?? .collapsed
+                } ?? .collapsed
 
                 setDrawerPosition(position: lowestDrawerState, animated: false)
             }
@@ -1002,18 +1002,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
 
     /**
-     Set the drawer position, by default the change will be animated. Deprecated. Recommend switching to the other setDrawerPosition method, this one will be removed in a future release.
-
-     - parameter position: The position to set the drawer to.
-     - parameter isAnimated: Whether or not to animate the change. Default: true
-     */
-    @available(*, deprecated)
-    public func setDrawerPosition(position: PulleyPosition, isAnimated: Bool = true)
-    {
-        setDrawerPosition(position: position, animated: isAnimated)
-    }
-
-    /**
      Change the current primary content view controller (The one behind the drawer)
 
      - parameter controller: The controller to replace it with
@@ -1356,13 +1344,14 @@ extension PulleyViewController: UIScrollViewDelegate {
 
     public func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
 
-        if scrollView == drawerScrollView
-        {
-            lastDragTargetContentOffset = targetContentOffset.pointee
-
-            // Halt intertia
-            targetContentOffset.pointee = scrollView.contentOffset
+        guard scrollView == drawerScrollView else {
+            return
         }
+
+        lastDragTargetContentOffset = targetContentOffset.pointee
+
+        // Halt intertia
+        targetContentOffset.pointee = scrollView.contentOffset
     }
 
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
