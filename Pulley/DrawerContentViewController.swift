@@ -36,6 +36,7 @@ class DrawerContentViewController: UIViewController {
 
         // Do any additional setup after loading the view.
         gripperView.layer.cornerRadius = 2.5
+        gripperTopConstraint.isActive = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -51,18 +52,6 @@ class DrawerContentViewController: UIViewController {
         }
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-
-        // The bounce here is optional, but it's done automatically after appearance as a demonstration.
-        Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(bounceDrawer), userInfo: nil, repeats: false)
-    }
-    
-    @objc fileprivate func bounceDrawer() {
-        
-        // We can 'bounce' the drawer to show users that the drawer needs their attention. There are optional parameters you can pass this method to control the bounce height and speed.
-        self.pulleyViewController?.bounceDrawer()
-    }
 }
 
 extension DrawerContentViewController: PulleyDrawerViewControllerDelegate {
@@ -106,31 +95,17 @@ extension DrawerContentViewController: PulleyDrawerViewControllerDelegate {
         
         // Handle tableview scrolling / searchbar editing
         
-        tableView.isScrollEnabled = drawer.drawerPosition == .open || drawer.currentDisplayMode == .leftSide
+        tableView.isScrollEnabled = drawer.drawerPosition == .open
         
         if drawer.drawerPosition != .open
         {
             searchBar.resignFirstResponder()
         }
-        
-        if drawer.currentDisplayMode == .leftSide
-        {
-            topSeparatorView.isHidden = drawer.drawerPosition == .collapsed
-            bottomSeperatorView.isHidden = drawer.drawerPosition == .collapsed
-        }
-        else
-        {
-            topSeparatorView.isHidden = false
-            bottomSeperatorView.isHidden = true
-        }
+
+        topSeparatorView.isHidden = false
+        bottomSeperatorView.isHidden = true
     }
-    
-    /// This function is called when the current drawer display mode changes. Make UI customizations here.
-    func drawerDisplayModeDidChange(drawer: PulleyViewController) {
-        
-        print("Drawer: \(drawer.currentDisplayMode)")
-        gripperTopConstraint.isActive = drawer.currentDisplayMode == .bottomDrawer
-    }
+
 }
 
 extension DrawerContentViewController: UISearchBarDelegate {
