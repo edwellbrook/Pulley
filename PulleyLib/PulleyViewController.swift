@@ -114,17 +114,6 @@ public typealias PulleyAnimationCompletionBlock = ((_ finished: Bool) -> Void)
     }
 }
 
-/// Represents the current display mode for Pulley
-///
-/// - leftSide: Show as a floating panel on the left
-/// - bottomDrawer: Show as a bottom drawer
-/// - automatic: Determine it based on device / orientation / size class (like Maps.app)
-public enum PulleyDisplayMode {
-    case leftSide
-    case bottomDrawer
-    case automatic
-}
-
 /// Represents the 'snap' mode for Pulley. The default is 'nearest position'. You can use 'nearestPositionUnlessExceeded' to make the drawer feel lighter or heavier.
 ///
 /// - nearestPosition: Snap to the nearest position when scroll stops
@@ -392,16 +381,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     /// The starting position for the drawer when it first loads
     public var initialDrawerPosition: PulleyPosition = .collapsed
 
-    /// The display mode for Pulley. Default is 'bottomDrawer', which preserves the previous behavior of Pulley. If you want it to adapt automatically, choose 'automatic'. The current display mode is available by using the 'currentDisplayMode' property.
-    public var displayMode: PulleyDisplayMode = .bottomDrawer {
-        didSet {
-            if self.isViewLoaded
-            {
-                self.view.setNeedsLayout()
-            }
-        }
-    }
-
     /// This is here exclusively to support IBInspectable in Interface Builder because Interface Builder can't deal with enums. If you're doing this in code use the -initialDrawerPosition property instead. Available strings are: open, closed, partiallyRevealed, collapsed
     @IBInspectable public var initialDrawerPositionFromIB: String? {
         didSet {
@@ -445,30 +424,11 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     public var snapMode: PulleySnapMode = .nearestPositionUnlessExceeded(threshold: 20.0)
 
     // The feedback generator to use for drawer positon changes. Note: This is 'Any' to preserve iOS 9 compatibilty. Assign a UIFeedbackGenerator to this property. Anything else will be ignored.
-    public var feedbackGenerator: Any?
+    public var feedbackGenerator: UIFeedbackGenerator?
 
     /// Access to the safe areas that Pulley is using for layout (provides compatibility for iOS < 11)
     public var pulleySafeAreaInsets: UIEdgeInsets {
-
-        var safeAreaBottomInset: CGFloat = 0
-        var safeAreaLeftInset: CGFloat = 0
-        var safeAreaRightInset: CGFloat = 0
-        var safeAreaTopInset: CGFloat = 0
-
-        if #available(iOS 11.0, *)
-        {
-            safeAreaBottomInset = view.safeAreaInsets.bottom
-            safeAreaLeftInset = view.safeAreaInsets.left
-            safeAreaRightInset = view.safeAreaInsets.right
-            safeAreaTopInset = view.safeAreaInsets.top
-        }
-        else
-        {
-            safeAreaBottomInset = self.bottomLayoutGuide.length
-            safeAreaTopInset = self.topLayoutGuide.length
-        }
-
-        return UIEdgeInsets(top: safeAreaTopInset, left: safeAreaLeftInset, bottom: safeAreaBottomInset, right: safeAreaRightInset)
+        return self.view.safeAreaInsets
     }
 
     /// Get the current drawer distance. This value is equivalent in nature to the one delivered by PulleyDelegate's `drawerChangedDistanceFromBottom` callback.
@@ -684,30 +644,13 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             }
         }
 
-        let safeAreaTopInset: CGFloat
-        let safeAreaBottomInset: CGFloat
+        let safeAreaTopInset = self.view.safeAreaInsets.top
+        let safeAreaBottomInset = self.view.safeAreaInsets.bottom
         let safeAreaLeftInset = pulleySafeAreaInsets.left
         let safeAreaRightInset = pulleySafeAreaInsets.right
 
-        if #available(iOS 11.0, *)
-        {
-            safeAreaTopInset = self.view.safeAreaInsets.top
-            safeAreaBottomInset = self.view.safeAreaInsets.bottom
-        }
-        else
-        {
-            safeAreaTopInset = self.topLayoutGuide.length
-            safeAreaBottomInset = self.bottomLayoutGuide.length
-        }
-
         // Bottom inset for safe area / bottomLayoutGuide
-        if #available(iOS 11, *) {
-            self.drawerScrollView.contentInsetAdjustmentBehavior = .scrollableAxes
-        } else {
-            self.automaticallyAdjustsScrollViewInsets = false
-            self.drawerScrollView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: self.bottomLayoutGuide.length, right: 0)
-            self.drawerScrollView.scrollIndicatorInsets =  UIEdgeInsets(top: 0, left: 0, bottom: self.bottomLayoutGuide.length, right: 0) // (usefull if visible..)
-        }
+        self.drawerScrollView.contentInsetAdjustmentBehavior = .scrollableAxes
 
         let lowestStop = getStopList().min() ?? 0
 
@@ -800,12 +743,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
 
         if supportedPositions.contains(.open)
         {
-            var safeAreaTopInset: CGFloat = 20.0
-
-            if #available(iOS 11.0, *)
-            {
-                safeAreaTopInset = view.safeAreaInsets.top
-            }
+            var safeAreaTopInset = view.safeAreaInsets.top
 
             drawerStops.append((self.view.bounds.size.height - topInset - safeAreaTopInset))
         }
@@ -836,25 +774,18 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
 
     open func prepareFeedbackGenerator() {
-
-        if #available(iOS 10.0, *) {
-            if let generator = feedbackGenerator as? UIFeedbackGenerator
-            {
-                generator.prepare()
-            }
+        if let generator = feedbackGenerator as? UIFeedbackGenerator
+        {
+            generator.prepare()
         }
     }
 
     open func triggerFeedbackGenerator() {
+        prepareFeedbackGenerator()
 
-        if #available(iOS 10.0, *) {
-
-            prepareFeedbackGenerator()
-
-            (feedbackGenerator as? UIImpactFeedbackGenerator)?.impactOccurred()
-            (feedbackGenerator as? UISelectionFeedbackGenerator)?.selectionChanged()
-            (feedbackGenerator as? UINotificationFeedbackGenerator)?.notificationOccurred(.success)
-        }
+        (feedbackGenerator as? UIImpactFeedbackGenerator)?.impactOccurred()
+        (feedbackGenerator as? UISelectionFeedbackGenerator)?.selectionChanged()
+        (feedbackGenerator as? UINotificationFeedbackGenerator)?.notificationOccurred(.success)
     }
 
     /// Bounce the drawer to get user attention. Note: Only works in .bottomDrawer display mode and when the drawer is in .collapsed or .partiallyRevealed position.
@@ -1097,24 +1028,19 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     // MARK: Propogate child view controller style / status bar presentation based on drawer state
 
     override open var childViewControllerForStatusBarStyle: UIViewController? {
-        get {
-
-            if drawerPosition == .open {
-                return drawerContentViewController
-            }
-
-            return primaryContentViewController
+        if drawerPosition == .open {
+            return drawerContentViewController
         }
+
+        return primaryContentViewController
     }
 
     override open var childViewControllerForStatusBarHidden: UIViewController? {
-        get {
-            if drawerPosition == .open {
-                return drawerContentViewController
-            }
-
-            return primaryContentViewController
+        if drawerPosition == .open {
+            return drawerContentViewController
         }
+
+        return primaryContentViewController
     }
 
     open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
