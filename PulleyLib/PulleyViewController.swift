@@ -1008,7 +1008,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
      - parameter animated:   Whether or not to animate the change. Defaults to true.
      - parameter completion: A block object to be executed when the animation sequence ends. The Bool indicates whether or not the animations actually finished before the completion handler was called.
      */
-    public func setPrimaryContentViewController(controller: UIViewController, animated: Bool = true, completion: PulleyAnimationCompletionBlock?)
+    public func setPrimaryContentViewController(controller: UIViewController, animated: Bool = true, completion: PulleyAnimationCompletionBlock? = nil)
     {
         // Account for transition issue in iOS 11
         controller.view.frame = primaryContentContainer.bounds
@@ -1033,24 +1033,13 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
 
     /**
-     Change the current primary content view controller (The one behind the drawer). This method exists for backwards compatibility.
-
-     - parameter controller: The controller to replace it with
-     - parameter animated:   Whether or not to animate the change. Defaults to true.
-     */
-    public func setPrimaryContentViewController(controller: UIViewController, animated: Bool = true)
-    {
-        setPrimaryContentViewController(controller: controller, animated: animated, completion: nil)
-    }
-
-    /**
      Change the current drawer content view controller (The one inside the drawer)
 
      - parameter controller: The controller to replace it with
      - parameter animated:   Whether or not to animate the change.
      - parameter completion: A block object to be executed when the animation sequence ends. The Bool indicates whether or not the animations actually finished before the completion handler was called.
      */
-    public func setDrawerContentViewController(controller: UIViewController, animated: Bool = true, completion: PulleyAnimationCompletionBlock?)
+    public func setDrawerContentViewController(controller: UIViewController, animated: Bool = true, completion: PulleyAnimationCompletionBlock? = nil)
     {
         // Account for transition issue in iOS 11
         controller.view.frame = drawerContentContainer.bounds
@@ -1075,17 +1064,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
 
             completion?(true)
         }
-    }
-
-    /**
-     Change the current drawer content view controller (The one inside the drawer). This method exists for backwards compatibility.
-
-     - parameter controller: The controller to replace it with
-     - parameter animated:   Whether or not to animate the change.
-     */
-    public func setDrawerContentViewController(controller: UIViewController, animated: Bool = true)
-    {
-        setDrawerContentViewController(controller: controller, animated: animated, completion: nil)
     }
 
     /**
