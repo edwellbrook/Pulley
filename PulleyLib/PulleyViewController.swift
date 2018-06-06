@@ -660,13 +660,23 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         if supportedPositions.contains(.open)
         {
             // Layout scrollview
-            drawerScrollView.frame = CGRect(x: adjustedLeftSafeArea, y: topInset + safeAreaTopInset, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: self.view.bounds.height - topInset - safeAreaTopInset)
+            drawerScrollView.frame = CGRect(
+                x: adjustedLeftSafeArea,
+                y: topInset + safeAreaTopInset,
+                width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea,
+                height: self.view.bounds.height - topInset - safeAreaTopInset
+            )
         }
         else
         {
             // Layout scrollview
             let adjustedTopInset: CGFloat = getStopList().max() ?? 0.0
-            drawerScrollView.frame = CGRect(x: adjustedLeftSafeArea, y: self.view.bounds.height - adjustedTopInset, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: adjustedTopInset)
+            drawerScrollView.frame = CGRect(
+                x: adjustedLeftSafeArea,
+                y: self.view.bounds.height - adjustedTopInset,
+                width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea,
+                height: adjustedTopInset
+            )
         }
 
         drawerScrollView.addSubview(drawerShadowView)
@@ -870,20 +880,13 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         let stopToMoveTo: CGFloat
 
         switch drawerPosition {
-
         case .collapsed:
             stopToMoveTo = collapsedHeight
-
         case .partiallyRevealed:
             stopToMoveTo = partialRevealHeight
-
         case .open:
             stopToMoveTo = (self.drawerScrollView.bounds.height)
-
         case .hidden:
-            stopToMoveTo = 0
-
-        default:
             stopToMoveTo = 0
         }
 
@@ -894,27 +897,23 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         if animated && self.view.window != nil
         {
             isAnimatingDrawerPosition = true
-            UIView.animate(withDuration: animationDuration, delay: animationDelay, usingSpringWithDamping: animationSpringDamping, initialSpringVelocity: animationSpringInitialVelocity, options: animationOptions, animations: { [weak self] () -> Void in
 
-                self?.drawerScrollView.setContentOffset(CGPoint(x: 0, y: stopToMoveTo - lowestStop), animated: false)
+            UIView.animate(withDuration: animationDuration, delay: animationDelay, usingSpringWithDamping: animationSpringDamping, initialSpringVelocity: animationSpringInitialVelocity, options: animationOptions, animations: {
+
+                self.drawerScrollView.setContentOffset(CGPoint(x: 0, y: stopToMoveTo - lowestStop), animated: false)
 
                 // Move backgroundDimmingView to avoid drawer background being darkened
-                self?.backgroundDimmingView.frame = self?.backgroundDimmingViewFrameForDrawerPosition(stopToMoveTo) ?? CGRect.zero
+                self.backgroundDimmingView.frame = self.backgroundDimmingViewFrameForDrawerPosition(stopToMoveTo)
 
-                if let drawer = self
-                {
-                    drawer.delegate?.drawerPositionDidChange?(drawer: drawer, bottomSafeArea: self?.pulleySafeAreaInsets.bottom ?? 0.0)
-                    (drawer.drawerContentViewController as? PulleyDrawerViewControllerDelegate)?.drawerPositionDidChange?(drawer: drawer, bottomSafeArea: self?.pulleySafeAreaInsets.bottom ?? 0.0)
-                    (drawer.primaryContentViewController as? PulleyPrimaryContentControllerDelegate)?.drawerPositionDidChange?(drawer: drawer, bottomSafeArea: self?.pulleySafeAreaInsets.bottom ?? 0.0)
+                self.delegate?.drawerPositionDidChange?(drawer: self, bottomSafeArea: self.pulleySafeAreaInsets.bottom)
+                (self.drawerContentViewController as? PulleyDrawerViewControllerDelegate)?.drawerPositionDidChange?(drawer: self, bottomSafeArea: self.pulleySafeAreaInsets.bottom)
+                (self.primaryContentViewController as? PulleyPrimaryContentControllerDelegate)?.drawerPositionDidChange?(drawer: self, bottomSafeArea: self.pulleySafeAreaInsets.bottom)
 
-                    drawer.view.layoutIfNeeded()
-                }
+                self.view.layoutIfNeeded()
 
-                }, completion: { [weak self] (completed) in
-
-                    self?.isAnimatingDrawerPosition = false
-
-                    completion?(completed)
+            }, completion: { (completed) in
+                self.isAnimatingDrawerPosition = false
+                completion?(completed)
             })
         }
         else
@@ -947,13 +946,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
 
         if animated
         {
-            UIView.transition(with: primaryContentContainer, duration: 0.5, options: .transitionCrossDissolve, animations: { [weak self] () -> Void in
-
-                self?.primaryContentViewController = controller
-
-                }, completion: { (completed) in
-
-                    completion?(completed)
+            UIView.transition(with: primaryContentContainer, duration: 0.5, options: .transitionCrossDissolve, animations: {
+                self.primaryContentViewController = controller
+            }, completion: { (completed) in
+                completion?(completed)
             })
         }
         else
@@ -978,14 +974,11 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
 
         if animated
         {
-            UIView.transition(with: drawerContentContainer, duration: 0.5, options: .transitionCrossDissolve, animations: { [weak self] () -> Void in
-
-                self?.drawerContentViewController = controller
-                self?.setDrawerPosition(position: self?.drawerPosition ?? .collapsed, animated: false)
-
-                }, completion: { (completed) in
-
-                    completion?(completed)
+            UIView.transition(with: drawerContentContainer, duration: 0.5, options: .transitionCrossDissolve, animations: {
+                self.drawerContentViewController = controller
+                self.setDrawerPosition(position: self.drawerPosition, animated: false)
+            }, completion: { (completed) in
+                completion?(completed)
             })
         }
         else
@@ -1041,19 +1034,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         }
 
         return primaryContentViewController
-    }
-
-    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-
-        coordinator.notifyWhenInteractionEnds { [weak self] (_) in
-
-            guard let currentPosition = self?.drawerPosition else {
-                return
-            }
-
-            self?.setDrawerPosition(position: currentPosition, animated: false)
-        }
     }
 
     // MARK: PulleyDrawerViewControllerDelegate implementation for nested Pulley view controllers in drawers. Implemented here, rather than an extension because overriding extensions in subclasses isn't good practice. Some developers want to subclass Pulley and customize these behaviors, so we'll move them here.
@@ -1263,6 +1243,8 @@ extension PulleyViewController: UIScrollViewDelegate {
         guard scrollView == drawerScrollView else {
             return
         }
+
+        print(scrollView.contentOffset.y)
 
         let partialRevealHeight: CGFloat = (drawerContentViewController as? PulleyDrawerViewControllerDelegate)?.partialRevealDrawerHeight(bottomSafeArea: pulleySafeAreaInsets.bottom) ?? kPulleyDefaultPartialRevealHeight
 
